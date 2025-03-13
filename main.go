@@ -7,7 +7,6 @@ import (
 
 	"github.com/go-vgo/robotgo"
 	"github.com/spf13/cobra"
-	hook "github.com/robotn/gohook"
 )
 
 func main() {
@@ -300,54 +299,6 @@ func main() {
 
 	windowCmd.AddCommand(windowActivateCmd, windowKillCmd, windowTitleCmd)
 	rootCmd.AddCommand(windowCmd)
-
-	// ===========================
-	// Event Commands Group
-	// ===========================
-	var eventCmd = &cobra.Command{
-		Use:   "event",
-		Short: "Event and hook related commands",
-	}
-
-	// Event listen command using gohook (stops after one trigger)
-	var eventListenCmd = &cobra.Command{
-		Use:   "listen",
-		Short: "Listen for a key combination and trigger an event",
-		Run: func(cmd *cobra.Command, args []string) {
-			keysStr, _ := cmd.Flags().GetString("keys")
-			if keysStr == "" {
-				fmt.Println("Please provide keys (comma-separated) for the event")
-				return
-			}
-			keys := strings.Split(keysStr, ",")
-			fmt.Printf("Listening for key combination: %v\n", keys)
-			hook.Register(hook.KeyDown, keys, func(e hook.Event) {
-				fmt.Printf("Event triggered: %+v\n", e)
-				hook.End() // stop listener after first event
-			})
-			s := hook.Start()
-			<-hook.Process(s)
-			fmt.Println("Event listener ended")
-		},
-	}
-	eventListenCmd.Flags().String("keys", "", "Comma-separated keys (e.g., ctrl,shift,q)")
-
-	// Low-level event printing command
-	var eventLowCmd = &cobra.Command{
-		Use:   "low",
-		Short: "Print all low-level events (Press Ctrl+C to exit)",
-		Run: func(cmd *cobra.Command, args []string) {
-			fmt.Println("Listening to all events. Press Ctrl+C to stop.")
-			evChan := hook.Start()
-			defer hook.End()
-			for ev := range evChan {
-				fmt.Printf("Event: %+v\n", ev)
-			}
-		},
-	}
-
-	eventCmd.AddCommand(eventListenCmd, eventLowCmd)
-	rootCmd.AddCommand(eventCmd)
 
 	// ===========================
 	// Clipboard Commands Group
