@@ -4,6 +4,10 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"image/png"
+	"bytes"
+	"encoding/base64"
+
 
 	"github.com/go-vgo/robotgo"
 	"github.com/spf13/cobra"
@@ -160,19 +164,17 @@ func main() {
 		Short: "Screen related commands",
 	}
 
-	// Screen capture command
 	var screenCaptureCmd = &cobra.Command{
 		Use:   "capture",
-		Short: "Capture a portion of the screen and save to a file",
+		Short: "Capture a portion of the screen and return a Base64 string",
 		Run: func(cmd *cobra.Command, args []string) {
-			// Check if the full flag is set
+			// Get flags
 			full, _ := cmd.Flags().GetBool("full")
 			x, _ := cmd.Flags().GetInt("x")
 			y, _ := cmd.Flags().GetInt("y")
 			width, _ := cmd.Flags().GetInt("width")
 			height, _ := cmd.Flags().GetInt("height")
-			output, _ := cmd.Flags().GetString("output")
-
+			
 			if full {
 				// Override values with full screen dimensions
 				x = 0
@@ -180,28 +182,35 @@ func main() {
 				width, height = robotgo.GetScreenSize()
 			}
 
+			// Capture screen area
 			bit := robotgo.CaptureScreen(x, y, width, height)
 			if bit == nil {
 				fmt.Println("Failed to capture screen")
 				return
 			}
 			defer robotgo.FreeBitmap(bit)
+
+			// Convert captured bitmap to image.Image
 			img := robotgo.ToImage(bit)
-			err := robotgo.Save(img, output)
+
+			// Encode the image to PNG into a buffer
+			var buf bytes.Buffer
+			err := png.Encode(&buf, img)
 			if err != nil {
-				fmt.Printf("Error saving screenshot: %v\n", err)
-			} else {
-				fmt.Printf("Saved screenshot to %s\n", output)
+				fmt.Printf("Error encoding screenshot: %v\n", err)
+				return
 			}
+
+			// Encode the PNG bytes to a Base64 string and print it
+			base64Str := base64.StdEncoding.EncodeToString(buf.Bytes())
+			fmt.Println(base64Str)
 		},
 	}
-
 	screenCaptureCmd.Flags().Bool("full", false, "Capture the full screen")
 	screenCaptureCmd.Flags().Int("x", 0, "X coordinate of capture")
 	screenCaptureCmd.Flags().Int("y", 0, "Y coordinate of capture")
 	screenCaptureCmd.Flags().Int("width", 100, "Width of capture")
 	screenCaptureCmd.Flags().Int("height", 100, "Height of capture")
-	screenCaptureCmd.Flags().String("output", "screenshot.png", "Output file name")
 
 	// Screen getpixel command
 	var screenGetPixelCmd = &cobra.Command{
