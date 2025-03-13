@@ -90,7 +90,7 @@ jobs:
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
           asset_path: artifacts/linux/robotgo-cli
-          asset_name: robotgo-cli-linux
+          asset_name: robotgo-cli
           asset_content_type: application/octet-stream
 
       - name: Upload Windows Binary
@@ -100,5 +100,5 @@ jobs:
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
           asset_path: artifacts/windows/robotgo-cli.exe
-          asset_name: robotgo-cli-windows.exe
+          asset_name: robotgo-cli.exe
           asset_content_type: application/octet-stream
